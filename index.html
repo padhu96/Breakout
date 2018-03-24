@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Breakout Game</title>
+    <style>
+        canvas {
+            background-color: blue;
+            border-style: solid;
+            border-color: black;
+            border-width: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <center>
+        <!--Spacing from top of screen-->
+        <br>
+        <br>
+        <br>
+        <br>
+        <!--Canvas-->
+        <canvas id="myCanvas" width=" 800" height="500"></canvas>
+    </center>
+    <script>
+        var canvas = document.getElementById("myCanvas");
+        var content = canvas.getContext("2d");
+        var x = canvas.width / 2, dx = 2;
+        var y = canvas.height - 50, dy = -3;
+        var radius = 10, pos = 300, rand = [-1, -2, -3, 3, 2, 1, 0], won, counter = 0;
+        var rightPress = false, leftPress = false;
+        var brkrows = 5, brkcols = 5, brklen = 95, brkhgt = 20, brkspace = 30, brktop = 50, brkleft = 110, brks = [];
+
+        //Initial Function Call
+        startGame();
+
+        //Function to draw the first image seen before game starts
+        function startGame() {
+            content.font = "50px Impact";
+            content.fillStyle = "white";
+            content.fillText("Breakout", 320, 135);
+
+
+            content.lineWidth = "6";
+            content.strokeStyle = "white";
+            content.rect(260, 75, 290, 80);
+            content.stroke();
+
+
+            content.font = "30px Impact";
+            content.fillStyle = "white";
+            content.fillText("Press Space Bar to start the game", 200, 285);
+        }
+
+        //To check what key was pressed
+        document.addEventListener("keypress", chkPress, false);
+        document.addEventListener("keydown", keyDownHandler, false);
+        document.addEventListener("keyup", keyUpHandler, false);
+
+        //Function called when spacebar(key =32) is pressed and game starting point
+        function chkPress(key) {
+            if (key.keyCode == 32) {
+                //Function for all images to be drawn
+                function drawall() {
+                    content.clearRect(0, 0, canvas.width, canvas.height);
+                    drawBall();
+                    drawPaddle();
+                    drawBricks();
+                    x += dx;
+                    y += dy;
+                    checkVal();
+                    collisionCheck();
+                    drawScore();
+                }
+                //Repeated calls to the drawall function
+                won = setInterval(drawall, 15);
+            }
+        }
+
+        //Function to draw the ball on canvas
+        function drawBall() {
+
+            content.beginPath();
+            content.arc(x, y, radius, 0, 6);
+            content.fillStyle = "red";
+            content.fill();
+            content.closePath();
+        }
+
+        //Function to draw the paddle on canvas
+        function drawPaddle() {
+            content.beginPath();
+            content.rect(pos, 460, 125, 10);
+            content.fillStyle = "black";
+            content.fill();
+        }
+
+        //Creating brick array of objects
+        for (c = 0; c < brkcols; c++) {
+            brks[c] = [];
+            for (r = 0; r < brkrows; r++) {
+                brks[c][r] = { x: 0, y: 0, status: 1 };
+
+            }
+        }
+
+        //Draw the bricks
+        function drawBricks() {
+            for (c = 0; c < brkcols; c++) {
+                for (r = 0; r < brkrows; r++) {
+                    if (brks[c][r].status == 1) {
+                        var brkx = (c * (brklen + brkspace)) + brkleft;
+                        var brky = (r * (brkhgt + brkspace)) + brktop;
+                        brks[c][r].x = brkx;
+                        brks[c][r].y = brky;
+                        content.beginPath();
+                        content.rect(brkx, brky, brklen, brkhgt);
+                        content.fillStyle = "#0095DD";
+                        content.fill();
+                        content.closePath();
+                    }
+                }
+            }
+        }
+
+
+        //Function to check if the ball hits the corner walls
+        function checkVal() {
+            if (x > canvas.width - radius || x < radius) {
+                dx = -dx;
+            }
+            if (y < radius) {
+                dy = -dy;
+            }
+            if (x > pos && x < pos + 125 && y == 450) {
+                dy = -dy;
+            }
+            if (y + radius > canvas.height) //If the ball goes down and hits the bottom wall
+            {
+                clearInterval(won);
+                content.clearRect(0, 0, canvas.width, canvas.height);
+                youLost();
+            }
+            if (counter == 25) //If all the bricks have been broken
+            {
+                clearInterval(won);
+                content.clearRect(0, 0, canvas.width, canvas.height);
+                youwin();
+            }
+            if (rightPress) {
+                if (pos + 5 < canvas.width - 125) { pos += 5; }
+            }
+            if (leftPress) {
+                if (pos - 5 > 0) { pos -= 5; }
+            }
+        }
+
+        //Fucntion to check if ball collided with the brick
+        function collisionCheck() {
+            for (c = 0; c < brkcols; c++) {
+                for (r = 0; r < brkrows; r++) {
+                    var b = brks[c][r];
+                    if (b.status == 1) {
+                        if (x > b.x && x < b.x + brklen && y > b.y && y < b.y + brkhgt) {
+                            dy = -dy;
+                            b.status = 0;
+                            counter++;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        //Function to draw the score on the screen
+        function drawScore() {
+            content.font = "35px Impact";
+            content.fillStyle = "white";
+            content.fillText("Score: " + counter, 330, 35);
+        }
+
+        //Function to display when you have lost
+        function youLost() {
+            content.font = "60px Impact";
+            content.fillStyle = "white";
+            content.fillText("Ah-Oh... Try Again ", 210, 250);
+        }
+
+        //Function to display winning after game ends 
+        function youwin() {
+
+            content.font = "60px Impact";
+            content.fillStyle = "white";
+            content.fillText("You Won !!! ", 260, 250);
+        }
+
+        //Function to see which key is held down - right arrow or left arrow 
+        function keyDownHandler(key) {
+            if (key.keyCode == 39)
+                rightPress = true;
+            if (key.keyCode == 37)
+                leftPress = true;
+        }
+
+        //Function to see which key is released from hold - right arrow or left arrow
+        function keyUpHandler(key) {
+            if (key.keyCode == 39)
+                rightPress = false;
+            if (key.keyCode == 37)
+                leftPress = false;
+        }
+
+        //Change dx value for each time after page refreshes
+        if (performance.navigation.type == 1) {
+            dx = rand[Math.round(Math.random() * (6 - 1))];
+        }
+
+    </script>
+
+
+</body></html>
